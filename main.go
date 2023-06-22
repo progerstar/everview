@@ -14,21 +14,22 @@ import (
 	"github.com/webview/webview"
 )
 
-//go:embed icon.png
-var imgData embed.FS
+//go:embed icon64.png
+var efs embed.FS
 
 const url = "https://www.evernote.com/client/web"
 
 func main() {
 
-	iconBytes, _ := imgData.ReadFile("icon.png")
+	iconBytes, _ := efs.ReadFile("icon64.png")
 
 	w := webview.New(false)
 	defer w.Destroy()
 	w.SetTitle("Everview")
 	w.SetSize(1200, 800, webview.HintNone)
-	w.Navigate(url)
+	C.gtk_window_set_icon_from_file((*C.GtkWindow)(w.Window()), C.CString("icon64.png"), nil)
 
+	w.Navigate(url)
 	systray.Register(onReady(w, iconBytes))
 
 	if len(os.Args) == 2 && os.Args[1] == "--hidden" {
