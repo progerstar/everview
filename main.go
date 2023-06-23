@@ -3,6 +3,16 @@ package main
 /*
 #cgo linux openbsd freebsd pkg-config: gtk+-3.0 webkit2gtk-4.0
 #include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+
+void setWindowIconFromBytes(GtkWindow* window, unsigned char* buf, int len) {
+    GInputStream* stream = g_memory_input_stream_new_from_data(buf, len, NULL);
+    GdkPixbuf* pixbuf = gdk_pixbuf_new_from_stream(stream, NULL, NULL);
+    gtk_window_set_icon(window, pixbuf);
+    g_object_unref(stream);
+    g_object_unref(pixbuf);
+}
+
 */
 import "C"
 
@@ -21,16 +31,16 @@ const url = "https://www.evernote.com/client/web"
 
 func main() {
 
-	iconBytes, _ := efs.ReadFile("icon64.png")
+	icon, _ := efs.ReadFile("icon64.png")
 
 	w := webview.New(false)
 	defer w.Destroy()
 	w.SetTitle("Everview")
 	w.SetSize(1200, 800, webview.HintNone)
-	C.gtk_window_set_icon_from_file((*C.GtkWindow)(w.Window()), C.CString("icon64.png"), nil)
+	C.setWindowIconFromBytes((*C.GtkWindow)(w.Window()), (*C.uchar)(&icon[0]), C.int(len(icon)))
 
 	w.Navigate(url)
-	systray.Register(onReady(w, iconBytes))
+	systray.Register(onReady(w, icon))
 
 	if len(os.Args) == 2 && os.Args[1] == "--hidden" {
 		C.gtk_widget_hide((*C.GtkWidget)(w.Window()))
